@@ -1,12 +1,31 @@
 <?php
 
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'ecopath_db');
+// Detect if running on localhost or production
+$isLocal = in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1']) || strpos($_SERVER['HTTP_HOST'], 'localhost:') !== false;
+
+if ($isLocal) {
+    // Local Database Credentials
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    define('DB_NAME', 'ecopath_db');
+} else {
+    // Production Database Credentials (ezyro)
+    define('DB_HOST', 'sql300.ezyro.com');
+    define('DB_USER', 'ezyro_42123151');
+    define('DB_PASS', 'Leeleelee2020');
+    define('DB_NAME', 'ezyro_42123151_ecopath');
+}
 
 define('APPROOT', dirname(dirname(__FILE__)));
-define('URLROOT', 'http://localhost/EcoPath/public');
+
+// Dynamic URLROOT (Auto-detects path on both Local and Production)
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+if ($scriptPath === '/' || $scriptPath === '\\') {
+    $scriptPath = '';
+}
+define('URLROOT', $protocol . '://' . $_SERVER['HTTP_HOST'] . str_replace('\\', '/', $scriptPath));
 define('SITENAME', 'EcoPath');
 
 // OAuth Credentials
