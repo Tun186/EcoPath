@@ -1,8 +1,9 @@
 <IfModule mod_rewrite.c>
-  Options -Multiviews
+  # Options -Multiviews is often blocked on free hosting and causes 500 errors
   RewriteEngine On
-  RewriteBase /EcoPath/public
+  
+  # Removed RewriteBase as it causes infinite loops if the folder name changes
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteRule  ^(.+)$ index.php?url=$1 [QSA,L]
+  RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
 </IfModule>
