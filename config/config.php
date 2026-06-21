@@ -28,6 +28,10 @@ if ($scriptPath === '/' || $scriptPath === '\\') {
 define('URLROOT', $protocol . '://' . $_SERVER['HTTP_HOST'] . str_replace('\\', '/', $scriptPath));
 define('SITENAME', 'EcoPath');
 
+// Gemini API Key for Driver License OCR
+define('GEMINI_API_KEY', 'AQ.Ab8RN6L7-wH1xHwY85wO6t135l5nGZYJ5K0bIj42SNOi47lIAA');
+
+
 // OAuth Credentials
 define('GOOGLE_CLIENT_ID', '864153578820-2nacn28icq6mk5r42pnt69t8kplr25qo.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', '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');

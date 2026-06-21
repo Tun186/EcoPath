@@ -17,7 +17,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 font-sans min-h-screen flex text-gray-800">
+<body class="bg-gray-50 font-sans h-screen flex overflow-hidden text-gray-800">
 
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-lg border-r border-gray-100 flex-shrink-0 relative hidden md:block z-20">

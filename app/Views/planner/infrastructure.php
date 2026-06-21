@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="bg-gray-50 font-sans min-h-screen flex text-gray-800" 
+<body class="bg-gray-50 font-sans h-screen flex overflow-hidden text-gray-800" 
       x-data="{ 
           openHotel: false, openLandmark: false, openBus: false, 
           openEditHotel: false, openEditLandmark: false, 

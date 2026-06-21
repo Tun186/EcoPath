@@ -2,3 +2,7 @@ vendor/
 composer.phar
 public/uploads/*
 !public/uploads/.gitkeep
+.env
+.env.*
+node_modules/
+dist/

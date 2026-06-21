@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="bg-gray-50 font-sans min-h-screen flex text-gray-800" x-data="packageCreator()">
+<body class="bg-gray-50 font-sans h-screen flex overflow-hidden text-gray-800" x-data="packageCreator()">
 
     <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-lg border-r border-gray-100 flex-shrink-0 relative hidden md:block z-20">

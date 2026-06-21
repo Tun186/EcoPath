@@ -76,7 +76,7 @@
         });
     </script>
 </head>
-<body class="bg-gray-50 font-sans min-h-screen flex text-gray-800" 
+<body class="bg-gray-50 font-sans h-screen flex overflow-hidden text-gray-800" 
       x-data="{ 
           openRegion: false, openCity: false,
           editRegionModal: false, editCityModal: false,
