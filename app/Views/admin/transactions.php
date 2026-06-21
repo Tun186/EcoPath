@@ -62,6 +62,7 @@
                                 <th class="px-6 py-4 font-semibold">Transaction ID</th>
                                 <th class="px-6 py-4 font-semibold">Customer</th>
                                 <th class="px-6 py-4 font-semibold">Package</th>
+                                <th class="px-6 py-4 font-semibold text-center">Seat</th>
                                 <th class="px-6 py-4 font-semibold">Date</th>
                                 <th class="px-6 py-4 font-semibold">Amount</th>
                                 <th class="px-6 py-4 font-semibold text-right">Status</th>
@@ -76,6 +77,15 @@
                                     <p class="text-xs text-gray-500"><?= htmlspecialchars($tx->Email) ?></p>
                                 </td>
                                 <td class="px-6 py-4 text-gray-600"><?= htmlspecialchars($tx->PackageName ?? 'Donation/Other') ?></td>
+                                <td class="px-6 py-4 text-center">
+                                    <?php if (!empty($tx->SeatNumber)): ?>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-eco-light text-eco-dark border border-eco-primary/30">
+                                            <?= htmlspecialchars($tx->SeatNumber) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-gray-450 font-mono">-</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-6 py-4 text-gray-500"><?= date('M j, Y', strtotime($tx->TransactionDate)) ?></td>
                                 <td class="px-6 py-4 font-bold text-gray-800">$<?= number_format($tx->TotalAmount, 2) ?></td>
                                 <td class="px-6 py-4 text-right">
@@ -89,7 +99,7 @@
                             
                             <?php if(empty($data['transactions'])): ?>
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                <td colspan="7" class="px-6 py-12 text-center text-gray-400">
                                     <svg class="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                                     <p>No transactions found.</p>
                                 </td>

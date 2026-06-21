@@ -31,6 +31,69 @@
           hotelRegion: '', editHotelRegion: '',
           landmarkRegion: '', editLandmarkRegion: '',
           
+          // Visual Seating Layout View State
+          openViewSeats: false,
+          viewSeatsBusName: '',
+          loadingViewSeats: false,
+          viewSeats: [],
+          viewSeatsBus: null,
+          
+          showBusSeats(busId, operatorName) {
+              this.viewSeatsBusName = operatorName;
+              this.openViewSeats = true;
+              this.loadingViewSeats = true;
+              this.viewSeats = [];
+              this.viewSeatsBus = null;
+              
+              fetch('<?= URLROOT ?>/planner/bus_seats/' + busId)
+                  .then(res => res.json())
+                  .then(data => {
+                      this.viewSeats = data.seats || [];
+                      this.viewSeatsBus = data.bus || null;
+                      this.loadingViewSeats = false;
+                  })
+                  .catch(err => {
+                      console.error('Error fetching bus seats:', err);
+                      this.loadingViewSeats = false;
+                  });
+          },
+
+          getViewLeftColumns() {
+              const layout = this.viewSeatsBus ? this.viewSeatsBus.SeatLayout : '2+2';
+              if (layout === '1+1') return [1];
+              return [1, 2];
+          },
+          
+          getViewRightColumns() {
+              const layout = this.viewSeatsBus ? this.viewSeatsBus.SeatLayout : '2+2';
+              if (layout === '1+1') return [2];
+              if (layout === '2+1') return [3];
+              return [3, 4];
+          },
+
+          getViewSeatRows() {
+              const rowLetters = new Set();
+              this.viewSeats.forEach(s => {
+                  if (s.SeatNumber) {
+                      const letter = s.SeatNumber.match(/^[A-Z]+/);
+                      if (letter) rowLetters.add(letter[0]);
+                  }
+              });
+              return Array.from(rowLetters).sort();
+          },
+          
+          getViewRowSeats(rowLetter, columns) {
+              return this.viewSeats.filter(s => {
+                  const match = s.SeatNumber.match(/^([A-Z]+)(\d+)$/);
+                  if (match) {
+                      const letter = match[1];
+                      const col = parseInt(match[2]);
+                      return letter === rowLetter && columns.includes(col);
+                  }
+                  return false;
+              }).sort((a, b) => a.SeatNumber.localeCompare(b.SeatNumber));
+          },
+          
           init() {
               this.$watch('openHotel', v => { if(v) setTimeout(() => setupMap('hotelMap', 'hotel_lat', 'hotel_lng'), 100) });
               this.$watch('openLandmark', v => { if(v) setTimeout(() => setupMap('landmarkMap', 'landmark_lat', 'landmark_lng'), 100) });
@@ -271,13 +334,45 @@
                 </div>
                 <table class="w-full text-left text-sm">
                     <thead class="text-gray-400 uppercase text-xs">
-                        <tr><th class="px-6 py-3">Operator</th><th class="px-6 py-3">Emission Rate (kg CO2/km)</th></tr>
+                        <tr>
+                            <th class="px-6 py-3">Operator</th>
+                            <th class="px-6 py-3">Company</th>
+                            <th class="px-6 py-3">Fuel Type</th>
+                            <th class="px-6 py-3">Layout</th>
+                            <th class="px-6 py-3">Total Seats</th>
+                            <th class="px-6 py-3 text-center">Emission Rate (kg CO2/km)</th>
+                            <th class="px-6 py-3 text-right">Actions</th>
+                        </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100" x-ref="tbody" x-init="initTable($el)">
                         <?php foreach($data['buses'] as $b): ?>
-                        <tr>
+                        <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-6 py-3 font-medium"><?= htmlspecialchars($b->OperatorName) ?></td>
-                            <td class="px-6 py-3 font-mono"><?= $b->EmissionRate ?></td>
+                            <td class="px-6 py-3 font-medium text-gray-700"><?= htmlspecialchars($b->BusCompany ?? 'Unknown') ?></td>
+                            <td class="px-6 py-3">
+                                <?php 
+                                $fuel = strtolower($b->FuelType ?? 'oil');
+                                if ($fuel === 'ev'): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 border border-green-200">EV</span>
+                                <?php elseif ($fuel === 'gas'): ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">Gas</span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">Oil</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-6 py-3 text-gray-600 font-medium">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                                    <?= htmlspecialchars($b->SeatLayout ?? '2+2') ?> Lanes
+                                </span>
+                            </td>
+                            <td class="px-6 py-3 font-medium"><?= htmlspecialchars($b->TotalSeats ?? 40) ?> seats</td>
+                            <td class="px-6 py-3 text-center font-mono"><?= $b->EmissionRate ?></td>
+                            <td class="px-6 py-3 text-right">
+                                <button type="button" @click="showBusSeats('<?= $b->BusID ?>', '<?= htmlspecialchars($b->OperatorName, ENT_QUOTES) ?>')" class="text-eco-primary hover:text-eco-dark font-medium transition text-xs flex items-center inline-flex bg-eco-light/50 px-2.5 py-1.5 rounded-lg border border-eco-primary/20">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    View Seats
+                                </button>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -400,6 +495,28 @@
                 <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="add_bus">
                     <input type="text" name="operator" required placeholder="Bus Operator Name" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    <select name="company" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                        <option value="" disabled selected>Select Bus Company</option>
+                        <option value="Scania">Scania</option>
+                        <option value="MAN">MAN</option>
+                        <option value="Hyundai">Hyundai</option>
+                        <option value="Volvo">Volvo</option>
+                        <option value="Yutong">Yutong</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select name="fuel_type" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                        <option value="" disabled selected>Select Fuel Type</option>
+                        <option value="EV">EV (Electric)</option>
+                        <option value="Gas">Gas (CNG/LNG)</option>
+                        <option value="Oil">Oil (Diesel)</option>
+                    </select>
+                    <select name="seat_layout" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                        <option value="" disabled selected>Select Seating Layout</option>
+                        <option value="2+2">2+2 (Standard - 4 seats/row)</option>
+                        <option value="2+1">2+1 (VIP/Luxury - 3 seats/row)</option>
+                        <option value="1+1">1+1 (Sleeper - 2 seats/row)</option>
+                    </select>
+                    <input type="number" name="total_seats" required placeholder="Total Seats (default 40)" min="1" max="100" value="40" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
                     <input type="number" step="any" name="emission_rate" required placeholder="Emission Rate (kg CO2 per km)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
                     <div class="flex space-x-3">
                         <button type="button" @click="openBus = false" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-xl">Cancel</button>
@@ -694,5 +811,100 @@
             }
         }
     </script>
+    <!-- View Seats Modal -->
+    <div x-show="openViewSeats" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-transition>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="openViewSeats = false"></div>
+            
+            <div class="inline-block w-full max-w-lg p-6 my-8 text-left bg-white shadow-2xl rounded-3xl z-10 relative border border-gray-100 animate-fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">Bus Seating Chart</h3>
+                        <p class="text-sm text-gray-500 mt-1" x-text="viewSeatsBusName"></p>
+                    </div>
+                    <button @click="openViewSeats = false" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div x-show="loadingViewSeats" class="py-12 flex flex-col justify-center items-center space-y-3">
+                    <svg class="animate-spin h-8 w-8 text-eco-primary" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-500 text-sm">Fetching seats layout...</span>
+                </div>
+
+                <!-- Seating Section -->
+                <div x-show="!loadingViewSeats">
+                    <!-- Bus Layout Box -->
+                    <div class="bg-gray-50 border border-gray-200/50 rounded-2xl p-6 mb-6">
+                        <!-- Bus Front Indicator -->
+                        <div class="flex justify-between items-center pb-4 mb-6 border-b border-gray-200 text-xs font-semibold text-gray-400 tracking-wider">
+                            <span>FRONT OF BUS</span>
+                            <span class="flex items-center text-gray-500 bg-white px-2 py-1 rounded-md shadow-sm border border-gray-100">
+                                <span class="w-2 h-2 bg-eco-primary rounded-full mr-1.5 animate-pulse"></span> Driver
+                            </span>
+                        </div>
+
+                        <!-- Seats Grid -->
+                        <div class="grid gap-y-4 max-h-[350px] overflow-y-auto pr-2">
+                            <template x-for="rowLetter in getViewSeatRows()" :key="rowLetter">
+                                <div class="flex justify-between items-center">
+                                    <!-- Left side -->
+                                    <div class="flex space-x-2">
+                                        <template x-for="seat in getViewRowSeats(rowLetter, getViewLeftColumns())" :key="seat.SeatID">
+                                            <div 
+                                                class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xs border shadow-sm select-none"
+                                                :class="{
+                                                    'bg-red-50 border-red-200 text-red-700': seat.IsBooked == 1,
+                                                    'bg-green-50 border-green-200 text-green-700': seat.IsBooked != 1
+                                                }"
+                                                :title="seat.IsBooked == 1 ? 'Booked' : 'Available'"
+                                            >
+                                                <span x-text="seat.SeatNumber"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Aisle -->
+                                    <div class="text-[10px] font-bold text-gray-300 tracking-widest uppercase">AISLE</div>
+
+                                    <!-- Right side -->
+                                    <div class="flex space-x-2">
+                                        <template x-for="seat in getViewRowSeats(rowLetter, getViewRightColumns())" :key="seat.SeatID">
+                                            <div 
+                                                class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xs border shadow-sm select-none"
+                                                :class="{
+                                                    'bg-red-50 border-red-200 text-red-700': seat.IsBooked == 1,
+                                                    'bg-green-50 border-green-200 text-green-700': seat.IsBooked != 1
+                                                }"
+                                                :title="seat.IsBooked == 1 ? 'Booked' : 'Available'"
+                                            >
+                                                <span x-text="seat.SeatNumber"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="flex justify-between items-center text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <div class="flex items-center space-x-6 mx-auto">
+                            <span class="flex items-center"><span class="w-3.5 h-3.5 bg-green-50 border border-green-200 rounded-md mr-1.5 shadow-sm"></span> Available</span>
+                            <span class="flex items-center"><span class="w-3.5 h-3.5 bg-red-50 border border-red-200 rounded-md mr-1.5 shadow-sm"></span> Booked</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <button type="button" @click="openViewSeats = false" class="w-full bg-gray-900 hover:bg-gray-800 text-white py-3.5 rounded-xl font-semibold transition text-sm">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -448,4 +448,16 @@ class Planner extends Controller {
         header('Location: ' . URLROOT . '/planner/locations?success=imported');
         exit;
     }
+
+    public function bus_seats($busId) {
+        $infrastructureModel = $this->model('Infrastructure');
+        $bus = $infrastructureModel->getBusById($busId);
+        $seats = $infrastructureModel->getSeatsByBusId($busId);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'bus' => $bus,
+            'seats' => $seats
+        ]);
+        exit;
+    }
 }
