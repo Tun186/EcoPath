@@ -32,8 +32,23 @@ function calculateEmissionRate($busHp, $totalSeats, $fuelType, $terrainType) {
         return 0.0;
     }
 
+    // Determine factors based on vehicle classification by seat capacity
+    if ($totalSeats <= 15) {
+        // Van
+        $engineFactor = 0.0004;
+        $passengerFactor = 0.0005;
+    } elseif ($totalSeats <= 30) {
+        // Mini Bus
+        $engineFactor = 0.0006;
+        $passengerFactor = 0.0008;
+    } else {
+        // Coach
+        $engineFactor = 0.0008;
+        $passengerFactor = 0.001;
+    }
+
     // 2. Calculate Total Fuel Consumed per 1 KM (Liters/km)
-    $fuelPerKm = ($busHp * ENGINE_FACTOR) + ($totalSeats * PASSENGER_FACTOR);
+    $fuelPerKm = ($busHp * $engineFactor) + ($totalSeats * $passengerFactor);
 
     // 3. Apply the Fuel Emission Factor
     $baseEmissionRate = $fuelPerKm * DIESEL_EMISSION_FACTOR;

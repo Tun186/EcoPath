@@ -259,7 +259,21 @@
                 }
 
                 // Step 2: Calculate Fuel
-                const baseFuelPerKm = (hp * ENGINE_FACTOR) + (seats * PASSENGER_FACTOR);
+                let engineFactor, passengerFactor;
+                if (seats <= 15) {
+                    // Van
+                    engineFactor = 0.0004;
+                    passengerFactor = 0.0005;
+                } else if (seats <= 30) {
+                    // Mini Bus
+                    engineFactor = 0.0006;
+                    passengerFactor = 0.0008;
+                } else {
+                    // Coach
+                    engineFactor = 0.0008;
+                    passengerFactor = 0.001;
+                }
+                const baseFuelPerKm = (hp * engineFactor) + (seats * passengerFactor);
                 const totalFuel = baseFuelPerKm * totalKm * terrainMultiplier;
 
                 // Step 3: Calculate Emission Rate (kg CO2/km)
