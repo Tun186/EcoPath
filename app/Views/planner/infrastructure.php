@@ -547,9 +547,16 @@
                         <input type="number" name="total_seats" required placeholder="e.g., 40" min="1" max="100" value="40" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Images (Min 1, Max 3)</label>
-                        <input type="file" name="bus_images[]" required multiple accept="image/*" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
-                        <p class="text-xs text-gray-500 mt-1">At least 1 image is required. Max 3 images allowed.</p>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Image 1 <span class="text-red-500">*</span></label>
+                        <input type="file" name="bus_image_1" required accept=".jpg,.jpeg,.png" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Image 2 (Optional)</label>
+                        <input type="file" name="bus_image_2" accept=".jpg,.jpeg,.png" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Image 3 (Optional)</label>
+                        <input type="file" name="bus_image_3" accept=".jpg,.jpeg,.png" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
                     </div>
                     <div class="flex space-x-3">
                         <button type="button" @click="openBus = false" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-xl">Cancel</button>

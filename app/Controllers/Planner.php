@@ -94,58 +94,58 @@ class Planner extends Controller {
                     }
 
                     // Validate and upload bus images
-                    $uploadedImages = [];
-                    if (!isset($_FILES['bus_images']) || empty($_FILES['bus_images']['name'][0])) {
-                        $_SESSION['import_errors'] = ["At least one bus image is required."];
-                        header('Location: ' . URLROOT . '/planner/infrastructure');
-                        exit;
-                    }
-
-                    $filesCount = count($_FILES['bus_images']['name']);
-                    if ($filesCount > 3) {
-                        $_SESSION['import_errors'] = ["A maximum of three images are allowed."];
-                        header('Location: ' . URLROOT . '/planner/infrastructure');
-                        exit;
-                    }
-
                     $uploadDir = APPROOT . '/../public/uploads/buses/';
                     if (!is_dir($uploadDir)) {
                         mkdir($uploadDir, 0755, true);
                     }
 
-                    for ($i = 0; $i < $filesCount; $i++) {
-                        if ($_FILES['bus_images']['error'][$i] !== UPLOAD_ERR_OK) {
-                            $_SESSION['import_errors'] = ["Error uploading file #" . ($i + 1)];
-                            header('Location: ' . URLROOT . '/planner/infrastructure');
-                            exit;
-                        }
+                    $uploadedImages = [null, null, null];
+                    $imageFields = ['bus_image_1', 'bus_image_2', 'bus_image_3'];
 
-                        $tmpPath = $_FILES['bus_images']['tmp_name'][$i];
-                        $originalName = $_FILES['bus_images']['name'][$i];
-                        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                    // Strict validation: Image 1 is required
+                    if (!isset($_FILES['bus_image_1']) || $_FILES['bus_image_1']['error'] === UPLOAD_ERR_NO_FILE) {
+                        $_SESSION['import_errors'] = ["Bus Image 1 is a required field."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
 
-                        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                        if (!in_array($extension, $allowed)) {
-                            $_SESSION['import_errors'] = ["Invalid file type. Allowed formats: JPG, JPEG, PNG, GIF, WEBP."];
-                            header('Location: ' . URLROOT . '/planner/infrastructure');
-                            exit;
-                        }
+                    // Process each input
+                    foreach ($imageFields as $index => $field) {
+                        if (isset($_FILES[$field]) && $_FILES[$field]['error'] !== UPLOAD_ERR_NO_FILE) {
+                            if ($_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+                                $_SESSION['import_errors'] = ["Error uploading Image " . ($index + 1)];
+                                header('Location: ' . URLROOT . '/planner/infrastructure');
+                                exit;
+                            }
 
-                        $newFileName = uniqid('bus_', true) . '.' . $extension;
-                        $destPath = $uploadDir . $newFileName;
+                            $tmpPath = $_FILES[$field]['tmp_name'];
+                            $originalName = $_FILES[$field]['name'];
+                            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-                        if (move_uploaded_file($tmpPath, $destPath)) {
-                            $uploadedImages[] = 'uploads/buses/' . $newFileName;
-                        } else {
-                            $_SESSION['import_errors'] = ["Failed to save uploaded image: " . $originalName];
-                            header('Location: ' . URLROOT . '/planner/infrastructure');
-                            exit;
+                            // Strict format validation: JPG, JPEG, PNG
+                            $allowed = ['jpg', 'jpeg', 'png'];
+                            if (!in_array($extension, $allowed)) {
+                                $_SESSION['import_errors'] = ["Invalid file format for Image " . ($index + 1) . ". Only JPG, JPEG, and PNG are allowed."];
+                                header('Location: ' . URLROOT . '/planner/infrastructure');
+                                exit;
+                            }
+
+                            $newFileName = uniqid('bus_', true) . '.' . $extension;
+                            $destPath = $uploadDir . $newFileName;
+
+                            if (move_uploaded_file($tmpPath, $destPath)) {
+                                $uploadedImages[$index] = 'uploads/buses/' . $newFileName;
+                            } else {
+                                $_SESSION['import_errors'] = ["Failed to save uploaded image: " . $originalName];
+                                header('Location: ' . URLROOT . '/planner/infrastructure');
+                                exit;
+                            }
                         }
                     }
 
-                    $_POST['Image1'] = $uploadedImages[0] ?? null;
-                    $_POST['Image2'] = $uploadedImages[1] ?? null;
-                    $_POST['Image3'] = $uploadedImages[2] ?? null;
+                    $_POST['Image1'] = $uploadedImages[0];
+                    $_POST['Image2'] = $uploadedImages[1];
+                    $_POST['Image3'] = $uploadedImages[2];
 
                     $infrastructureModel->createBus($_POST);
                 } elseif ($_POST['action'] == 'edit_hotel') {
