@@ -500,7 +500,7 @@
                     <input type="hidden" name="action" value="add_bus">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Actual Bus ID (License Plate / Code)</label>
-                        <input type="text" name="custom_bus_id" placeholder="e.g., CC-0000 (Optional)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                        <input type="text" name="custom_bus_id" required placeholder="e.g., CC-0000" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Bus Operator Name</label>

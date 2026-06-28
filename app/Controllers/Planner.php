@@ -73,19 +73,23 @@ class Planner extends Controller {
                     $total_seats = isset($_POST['total_seats']) ? trim($_POST['total_seats']) : '';
                     $custom_bus_id = isset($_POST['custom_bus_id']) ? trim($_POST['custom_bus_id']) : '';
 
+                    if ($custom_bus_id === '') {
+                        $_SESSION['import_errors'] = ["Actual Bus ID is required."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
+
                     if ($hp === '' || !ctype_digit($hp) || $total_seats === '' || !ctype_digit($total_seats)) {
                         $_SESSION['import_errors'] = ["Engine Horsepower (HP) and Passenger Capacity (Total Seats) are required and must be positive integers."];
                         header('Location: ' . URLROOT . '/planner/infrastructure');
                         exit;
                     }
 
-                    if ($custom_bus_id !== '') {
-                        $existing = $infrastructureModel->getBusById($custom_bus_id);
-                        if ($existing) {
-                            $_SESSION['import_errors'] = ["Actual Bus ID '$custom_bus_id' already exists in the database. Please use a unique ID."];
-                            header('Location: ' . URLROOT . '/planner/infrastructure');
-                            exit;
-                        }
+                    $existing = $infrastructureModel->getBusById($custom_bus_id);
+                    if ($existing) {
+                        $_SESSION['import_errors'] = ["Actual Bus ID '$custom_bus_id' already exists in the database. Please use a unique ID."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
                     }
 
                     $infrastructureModel->createBus($_POST);
