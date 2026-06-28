@@ -69,6 +69,14 @@ class Planner extends Controller {
                 } elseif ($_POST['action'] == 'add_landmark') {
                     $infrastructureModel->createLandmark($_POST);
                 } elseif ($_POST['action'] == 'add_bus') {
+                    $hp = isset($_POST['hp']) ? trim($_POST['hp']) : '';
+                    $total_seats = isset($_POST['total_seats']) ? trim($_POST['total_seats']) : '';
+
+                    if ($hp === '' || !ctype_digit($hp) || $total_seats === '' || !ctype_digit($total_seats)) {
+                        $_SESSION['import_errors'] = ["Engine Horsepower (HP) and Passenger Capacity (Total Seats) are required and must be positive integers."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
                     $infrastructureModel->createBus($_POST);
                 } elseif ($_POST['action'] == 'edit_hotel') {
                     $infrastructureModel->updateHotel($_POST);

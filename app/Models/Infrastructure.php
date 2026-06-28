@@ -156,8 +156,9 @@ class Infrastructure {
         $company = isset($data['company']) ? trim($data['company']) : 'Unknown';
         $fuelType = isset($data['fuel_type']) ? trim($data['fuel_type']) : 'Oil';
         $seatLayout = isset($data['seat_layout']) ? trim($data['seat_layout']) : '2+2';
+        $hp = isset($data['hp']) ? intval($data['hp']) : 0;
         
-        $this->db->query('INSERT INTO Bus (BusID, DriverID, OperatorName, EmissionRate, TotalSeats, BusCompany, FuelType, SeatLayout) VALUES (:bid, :did, :name, :emission, :seats, :company, :fuel, :layout)');
+        $this->db->query('INSERT INTO Bus (BusID, DriverID, OperatorName, EmissionRate, TotalSeats, BusCompany, FuelType, SeatLayout, HP) VALUES (:bid, :did, :name, :emission, :seats, :company, :fuel, :layout, :hp)');
         $this->db->bind(':bid', $busId);
         $this->db->bind(':did', $driverId);
         $this->db->bind(':name', $data['operator']);
@@ -166,6 +167,7 @@ class Infrastructure {
         $this->db->bind(':company', $company);
         $this->db->bind(':fuel', $fuelType);
         $this->db->bind(':layout', $seatLayout);
+        $this->db->bind(':hp', $hp);
         
         if (!$this->db->execute()) {
             return false;

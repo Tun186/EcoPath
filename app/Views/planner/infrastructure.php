@@ -338,6 +338,7 @@
                             <th class="px-6 py-3">Operator</th>
                             <th class="px-6 py-3">Company</th>
                             <th class="px-6 py-3">Fuel Type</th>
+                            <th class="px-6 py-3">HP</th>
                             <th class="px-6 py-3">Layout</th>
                             <th class="px-6 py-3">Total Seats</th>
                             <th class="px-6 py-3 text-center">Emission Rate (kg CO2/km)</th>
@@ -360,6 +361,7 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">Oil</span>
                                 <?php endif; ?>
                             </td>
+                            <td class="px-6 py-3 font-semibold text-slate-700"><?= htmlspecialchars($b->HP ?? 0) ?> HP</td>
                             <td class="px-6 py-3 text-gray-600 font-medium">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
                                     <?= htmlspecialchars($b->SeatLayout ?? '2+2') ?> Lanes
@@ -516,8 +518,18 @@
                         <option value="2+1">2+1 (VIP/Luxury - 3 seats/row)</option>
                         <option value="1+1">1+1 (Sleeper - 2 seats/row)</option>
                     </select>
-                    <input type="number" name="total_seats" required placeholder="Total Seats (default 40)" min="1" max="100" value="40" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
-                    <input type="number" step="any" name="emission_rate" required placeholder="Emission Rate (kg CO2 per km)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Engine Horsepower (HP)</label>
+                        <input type="number" name="hp" required placeholder="e.g., 410" min="1" max="2000" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Passenger Seats</label>
+                        <input type="number" name="total_seats" required placeholder="e.g., 40" min="1" max="100" value="40" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Emission Rate (kg CO2 per km)</label>
+                        <input type="number" step="any" name="emission_rate" required placeholder="e.g., 0.15" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    </div>
                     <div class="flex space-x-3">
                         <button type="button" @click="openBus = false" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-xl">Cancel</button>
                         <button type="submit" class="w-1/2 bg-eco-primary text-white py-2 rounded-xl">Save</button>
