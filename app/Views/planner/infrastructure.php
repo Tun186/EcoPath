@@ -526,10 +526,6 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Total Passenger Seats</label>
                         <input type="number" name="total_seats" required placeholder="e.g., 40" min="1" max="100" value="40" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Emission Rate (kg CO2 per km)</label>
-                        <input type="number" step="any" name="emission_rate" required placeholder="e.g., 0.15" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
-                    </div>
                     <div class="flex space-x-3">
                         <button type="button" @click="openBus = false" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-xl">Cancel</button>
                         <button type="submit" class="w-1/2 bg-eco-primary text-white py-2 rounded-xl">Save</button>

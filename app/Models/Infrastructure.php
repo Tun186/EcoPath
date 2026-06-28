@@ -157,12 +157,13 @@ class Infrastructure {
         $fuelType = isset($data['fuel_type']) ? trim($data['fuel_type']) : 'Oil';
         $seatLayout = isset($data['seat_layout']) ? trim($data['seat_layout']) : '2+2';
         $hp = isset($data['hp']) ? intval($data['hp']) : 0;
+        $emissionRate = calculateEmissionRate($hp, $totalSeats, $fuelType, 'Flat');
         
         $this->db->query('INSERT INTO Bus (BusID, DriverID, OperatorName, EmissionRate, TotalSeats, BusCompany, FuelType, SeatLayout, HP) VALUES (:bid, :did, :name, :emission, :seats, :company, :fuel, :layout, :hp)');
         $this->db->bind(':bid', $busId);
         $this->db->bind(':did', $driverId);
         $this->db->bind(':name', $data['operator']);
-        $this->db->bind(':emission', $data['emission_rate']);
+        $this->db->bind(':emission', $emissionRate);
         $this->db->bind(':seats', $totalSeats);
         $this->db->bind(':company', $company);
         $this->db->bind(':fuel', $fuelType);
