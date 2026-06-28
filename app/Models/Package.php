@@ -10,7 +10,8 @@ class Package {
         $this->db->query('
             SELECT p.*, b.OperatorName,
             (SELECT GROUP_CONCAT(h.HotelName SEPARATOR ", ") FROM Package_Hotel ph JOIN Hotel h ON ph.HotelID = h.HotelID WHERE ph.PackageID = p.PackageID) as Hotels,
-            (SELECT GROUP_CONCAT(l.LandmarkName SEPARATOR ", ") FROM Package_Landmarks pl JOIN Landmarks l ON pl.LandmarkID = l.LandmarkID WHERE pl.PackageID = p.PackageID) as Landmarks
+            (SELECT GROUP_CONCAT(l.LandmarkName SEPARATOR ", ") FROM Package_Landmarks pl JOIN Landmarks l ON pl.LandmarkID = l.LandmarkID WHERE pl.PackageID = p.PackageID) as Landmarks,
+            (SELECT GROUP_CONCAT(pp.LocationName SEPARATOR ", ") FROM pickup_points pp WHERE pp.PackageID = p.PackageID) as PickupPoints
             FROM package p 
             LEFT JOIN bus b ON p.BusID = b.BusID
         ');
@@ -58,6 +59,22 @@ class Package {
                 $this->db->bind(':pid', $packageId);
                 $this->db->bind(':lid', $landmarkId);
                 $this->db->execute();
+            }
+        }
+
+        // Insert pickup points
+        if (!empty($data['pickup_points'])) {
+            $points = explode(',', $data['pickup_points']);
+            foreach ($points as $point) {
+                $pointName = trim($point);
+                if ($pointName !== '') {
+                    $pointId = $this->db->autoID('pickup_points', 'PickupPointID', 'PKP-', 6);
+                    $this->db->query('INSERT INTO pickup_points (PickupPointID, PackageID, LocationName) VALUES (:id, :pid, :name)');
+                    $this->db->bind(':id', $pointId);
+                    $this->db->bind(':pid', $packageId);
+                    $this->db->bind(':name', $pointName);
+                    $this->db->execute();
+                }
             }
         }
         

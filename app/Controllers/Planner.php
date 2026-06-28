@@ -35,7 +35,8 @@ class Planner extends Controller {
                 'distance' => $_POST['distance'],
                 'calculated_co2' => $_POST['calculated_co2'],
                 'hotel_ids' => $_POST['hotel_ids'] ?? [],
-                'landmark_ids' => $_POST['landmark_ids'] ?? []
+                'landmark_ids' => $_POST['landmark_ids'] ?? [],
+                'pickup_points' => isset($_POST['pickup_points']) ? trim($_POST['pickup_points']) : ''
             ];
             
             $packageModel->createPlannerPackage($data);
@@ -91,6 +92,60 @@ class Planner extends Controller {
                         header('Location: ' . URLROOT . '/planner/infrastructure');
                         exit;
                     }
+
+                    // Validate and upload bus images
+                    $uploadedImages = [];
+                    if (!isset($_FILES['bus_images']) || empty($_FILES['bus_images']['name'][0])) {
+                        $_SESSION['import_errors'] = ["At least one bus image is required."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
+
+                    $filesCount = count($_FILES['bus_images']['name']);
+                    if ($filesCount > 3) {
+                        $_SESSION['import_errors'] = ["A maximum of three images are allowed."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
+
+                    $uploadDir = APPROOT . '/../public/uploads/buses/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+
+                    for ($i = 0; $i < $filesCount; $i++) {
+                        if ($_FILES['bus_images']['error'][$i] !== UPLOAD_ERR_OK) {
+                            $_SESSION['import_errors'] = ["Error uploading file #" . ($i + 1)];
+                            header('Location: ' . URLROOT . '/planner/infrastructure');
+                            exit;
+                        }
+
+                        $tmpPath = $_FILES['bus_images']['tmp_name'][$i];
+                        $originalName = $_FILES['bus_images']['name'][$i];
+                        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+                        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                        if (!in_array($extension, $allowed)) {
+                            $_SESSION['import_errors'] = ["Invalid file type. Allowed formats: JPG, JPEG, PNG, GIF, WEBP."];
+                            header('Location: ' . URLROOT . '/planner/infrastructure');
+                            exit;
+                        }
+
+                        $newFileName = uniqid('bus_', true) . '.' . $extension;
+                        $destPath = $uploadDir . $newFileName;
+
+                        if (move_uploaded_file($tmpPath, $destPath)) {
+                            $uploadedImages[] = 'uploads/buses/' . $newFileName;
+                        } else {
+                            $_SESSION['import_errors'] = ["Failed to save uploaded image: " . $originalName];
+                            header('Location: ' . URLROOT . '/planner/infrastructure');
+                            exit;
+                        }
+                    }
+
+                    $_POST['Image1'] = $uploadedImages[0] ?? null;
+                    $_POST['Image2'] = $uploadedImages[1] ?? null;
+                    $_POST['Image3'] = $uploadedImages[2] ?? null;
 
                     $infrastructureModel->createBus($_POST);
                 } elseif ($_POST['action'] == 'edit_hotel') {

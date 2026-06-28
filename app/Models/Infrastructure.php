@@ -159,7 +159,7 @@ class Infrastructure {
         $hp = isset($data['hp']) ? intval($data['hp']) : 0;
         $emissionRate = calculateEmissionRate($hp, $totalSeats, $fuelType, 'Flat');
         
-        $this->db->query('INSERT INTO Bus (BusID, DriverID, OperatorName, EmissionRate, TotalSeats, BusCompany, FuelType, SeatLayout, HP) VALUES (:bid, :did, :name, :emission, :seats, :company, :fuel, :layout, :hp)');
+        $this->db->query('INSERT INTO Bus (BusID, DriverID, OperatorName, EmissionRate, TotalSeats, BusCompany, FuelType, SeatLayout, HP, Image1, Image2, Image3) VALUES (:bid, :did, :name, :emission, :seats, :company, :fuel, :layout, :hp, :img1, :img2, :img3)');
         $this->db->bind(':bid', $busId);
         $this->db->bind(':did', $driverId);
         $this->db->bind(':name', $data['operator']);
@@ -169,6 +169,9 @@ class Infrastructure {
         $this->db->bind(':fuel', $fuelType);
         $this->db->bind(':layout', $seatLayout);
         $this->db->bind(':hp', $hp);
+        $this->db->bind(':img1', isset($data['Image1']) ? $data['Image1'] : null);
+        $this->db->bind(':img2', isset($data['Image2']) ? $data['Image2'] : null);
+        $this->db->bind(':img3', isset($data['Image3']) ? $data['Image3'] : null);
         
         if (!$this->db->execute()) {
             return false;

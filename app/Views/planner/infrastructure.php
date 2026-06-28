@@ -350,7 +350,18 @@
                         <?php foreach($data['buses'] as $b): ?>
                         <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-6 py-3 font-mono text-xs text-gray-500 font-semibold"><?= htmlspecialchars($b->BusID) ?></td>
-                            <td class="px-6 py-3 font-medium"><?= htmlspecialchars($b->OperatorName) ?></td>
+                            <td class="px-6 py-3 font-medium">
+                                <div class="flex items-center space-x-3">
+                                    <?php if (!empty($b->Image1)): ?>
+                                        <img src="<?= URLROOT . '/' . $b->Image1 ?>" class="w-10 h-10 object-cover rounded-lg border shadow-sm" alt="Bus image">
+                                    <?php else: ?>
+                                        <div class="w-10 h-10 bg-gray-100 border rounded-lg flex items-center justify-center text-gray-400">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                    <?php endif; ?>
+                                    <span><?= htmlspecialchars($b->OperatorName) ?></span>
+                                </div>
+                            </td>
                             <td class="px-6 py-3 font-medium text-gray-700"><?= htmlspecialchars($b->BusCompany ?? 'Unknown') ?></td>
                             <td class="px-6 py-3">
                                 <?php 
@@ -496,7 +507,7 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" class="space-y-4">
+                <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" enctype="multipart/form-data" class="space-y-4">
                     <input type="hidden" name="action" value="add_bus">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Actual Bus ID (License Plate / Code)</label>
@@ -534,6 +545,11 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Total Passenger Seats</label>
                         <input type="number" name="total_seats" required placeholder="e.g., 40" min="1" max="100" value="40" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Images (Min 1, Max 3)</label>
+                        <input type="file" name="bus_images[]" required multiple accept="image/*" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                        <p class="text-xs text-gray-500 mt-1">At least 1 image is required. Max 3 images allowed.</p>
                     </div>
                     <div class="flex space-x-3">
                         <button type="button" @click="openBus = false" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-xl">Cancel</button>
