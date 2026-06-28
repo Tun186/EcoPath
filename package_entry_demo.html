@@ -278,8 +278,10 @@
 
                 // Step 3: Calculate Emission Rate (kg CO2/km)
                 let emissionRate = 0;
-                if (fuelType.toUpperCase() !== 'EV') {
-                    emissionRate = baseFuelPerKm * DIESEL_EMISSION_FACTOR * terrainMultiplier;
+                const fuelUpper = fuelType.toUpperCase().trim();
+                if (fuelUpper !== 'EV') {
+                    const emissionFactor = (fuelUpper === 'GAS' || fuelUpper === 'CNG') ? 1.90 : 2.68;
+                    emissionRate = baseFuelPerKm * emissionFactor * terrainMultiplier;
                 }
 
                 // Step 4: Update DOM (gracefully handling calculations)

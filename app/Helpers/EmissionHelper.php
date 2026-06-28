@@ -27,9 +27,14 @@ if (!defined('TERRAIN_MULTIPLIERS')) {
  * @return float Final emission rate rounded to 2 decimal places
  */
 function calculateEmissionRate($busHp, $totalSeats, $fuelType, $terrainType) {
-    // 1. Check for EV (Zero Tailpipe Emissions)
-    if (strcasecmp($fuelType, 'EV') === 0) {
+    // Determine the emission factor based on fuel type
+    $fuelTypeUpper = strtoupper(trim($fuelType));
+    if ($fuelTypeUpper === 'EV') {
         return 0.0;
+    } elseif ($fuelTypeUpper === 'GAS' || $fuelTypeUpper === 'CNG') {
+        $emissionFactor = 1.90; // CNG / Gas
+    } else {
+        $emissionFactor = 2.68; // Diesel / Oil
     }
 
     // Determine factors based on vehicle classification by seat capacity
@@ -51,7 +56,7 @@ function calculateEmissionRate($busHp, $totalSeats, $fuelType, $terrainType) {
     $fuelPerKm = ($busHp * $engineFactor) + ($totalSeats * $passengerFactor);
 
     // 3. Apply the Fuel Emission Factor
-    $baseEmissionRate = $fuelPerKm * DIESEL_EMISSION_FACTOR;
+    $baseEmissionRate = $fuelPerKm * $emissionFactor;
 
     // 4. Calculate Final Emission Rate (kg CO2/km)
     $terrainMultiplier = isset(TERRAIN_MULTIPLIERS[$terrainType]) ? TERRAIN_MULTIPLIERS[$terrainType] : 1.0;
