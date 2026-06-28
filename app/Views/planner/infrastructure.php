@@ -335,6 +335,7 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-gray-400 uppercase text-xs">
                         <tr>
+                            <th class="px-6 py-3">Bus ID</th>
                             <th class="px-6 py-3">Operator</th>
                             <th class="px-6 py-3">Company</th>
                             <th class="px-6 py-3">Fuel Type</th>
@@ -348,6 +349,7 @@
                     <tbody class="divide-y divide-gray-100" x-ref="tbody" x-init="initTable($el)">
                         <?php foreach($data['buses'] as $b): ?>
                         <tr class="hover:bg-gray-50/50 transition">
+                            <td class="px-6 py-3 font-mono text-xs text-gray-500 font-semibold"><?= htmlspecialchars($b->BusID) ?></td>
                             <td class="px-6 py-3 font-medium"><?= htmlspecialchars($b->OperatorName) ?></td>
                             <td class="px-6 py-3 font-medium text-gray-700"><?= htmlspecialchars($b->BusCompany ?? 'Unknown') ?></td>
                             <td class="px-6 py-3">
@@ -496,7 +498,14 @@
                 </div>
                 <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="add_bus">
-                    <input type="text" name="operator" required placeholder="Bus Operator Name" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Actual Bus ID (License Plate / Code)</label>
+                        <input type="text" name="custom_bus_id" placeholder="e.g., CC-0000 (Optional)" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Operator Name</label>
+                        <input type="text" name="operator" required placeholder="e.g., Scania VIP Express" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
+                    </div>
                     <select name="company" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary">
                         <option value="" disabled selected>Select Bus Company</option>
                         <option value="Scania">Scania</option>

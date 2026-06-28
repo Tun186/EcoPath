@@ -67,7 +67,8 @@ class Database {
     }
 
     public function autoID($tableName, $columnName, $prefix, $numberLength) {
-        $this->query("SELECT MAX($columnName) AS MaxID FROM $tableName");
+        $this->query("SELECT MAX($columnName) AS MaxID FROM $tableName WHERE $columnName LIKE :prefix");
+        $this->bind(':prefix', $prefix . '%');
         $row = $this->single();
 
         if ($row && $row->MaxID) {

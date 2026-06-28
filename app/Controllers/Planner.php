@@ -71,12 +71,23 @@ class Planner extends Controller {
                 } elseif ($_POST['action'] == 'add_bus') {
                     $hp = isset($_POST['hp']) ? trim($_POST['hp']) : '';
                     $total_seats = isset($_POST['total_seats']) ? trim($_POST['total_seats']) : '';
+                    $custom_bus_id = isset($_POST['custom_bus_id']) ? trim($_POST['custom_bus_id']) : '';
 
                     if ($hp === '' || !ctype_digit($hp) || $total_seats === '' || !ctype_digit($total_seats)) {
                         $_SESSION['import_errors'] = ["Engine Horsepower (HP) and Passenger Capacity (Total Seats) are required and must be positive integers."];
                         header('Location: ' . URLROOT . '/planner/infrastructure');
                         exit;
                     }
+
+                    if ($custom_bus_id !== '') {
+                        $existing = $infrastructureModel->getBusById($custom_bus_id);
+                        if ($existing) {
+                            $_SESSION['import_errors'] = ["Actual Bus ID '$custom_bus_id' already exists in the database. Please use a unique ID."];
+                            header('Location: ' . URLROOT . '/planner/infrastructure');
+                            exit;
+                        }
+                    }
+
                     $infrastructureModel->createBus($_POST);
                 } elseif ($_POST['action'] == 'edit_hotel') {
                     $infrastructureModel->updateHotel($_POST);

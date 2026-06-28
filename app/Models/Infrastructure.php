@@ -151,7 +151,7 @@ class Infrastructure {
             $this->db->execute();
         }
 
-        $busId = $this->db->autoID('Bus', 'BusID', 'BUS-', 6);
+        $busId = (!empty($data['custom_bus_id'])) ? trim($data['custom_bus_id']) : $this->db->autoID('Bus', 'BusID', 'BUS-', 6);
         $totalSeats = isset($data['total_seats']) ? intval($data['total_seats']) : 40;
         $company = isset($data['company']) ? trim($data['company']) : 'Unknown';
         $fuelType = isset($data['fuel_type']) ? trim($data['fuel_type']) : 'Oil';
