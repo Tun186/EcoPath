@@ -32,8 +32,9 @@ class Infrastructure {
         return $this->db->resultSet();
     }
 
-    public function getAllBuses() {
-        $this->db->query('SELECT * FROM Bus ORDER BY OperatorName ASC');
+    public function getAllBuses($isActive = 1) {
+        $this->db->query('SELECT * FROM Bus WHERE IsActive = :active ORDER BY OperatorName ASC');
+        $this->db->bind(':active', $isActive);
         return $this->db->resultSet();
     }
 
@@ -281,5 +282,99 @@ class Infrastructure {
         $this->db->query('SELECT * FROM Bus WHERE BusID = :bid');
         $this->db->bind(':bid', $busId);
         return $this->db->single();
+    }
+
+    public function toggleBusStatus($id, $status) {
+        $this->db->query('UPDATE Bus SET IsActive = :status WHERE BusID = :id');
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function checkBusUsageCount($busId) {
+        $this->db->query('SELECT COUNT(*) AS count FROM package WHERE BusID = :bid');
+        $this->db->bind(':bid', $busId);
+        $row = $this->db->single();
+        return $row ? (int)$row->count : 0;
+    }
+
+    public function updateBus($data) {
+        $existing = $this->getBusById($data['bus_id']);
+        if (!$existing) {
+            return false;
+        }
+
+        $image1 = isset($data['Image1']) && $data['Image1'] !== null ? $data['Image1'] : $existing->Image1;
+        $image2 = isset($data['Image2']) && $data['Image2'] !== null ? $data['Image2'] : $existing->Image2;
+        $image3 = isset($data['Image3']) && $data['Image3'] !== null ? $data['Image3'] : $existing->Image3;
+
+        $totalSeats = isset($data['total_seats']) ? intval($data['total_seats']) : intval($existing->TotalSeats);
+        $company = isset($data['company']) ? trim($data['company']) : $existing->BusCompany;
+        $fuelType = isset($data['fuel_type']) ? trim($data['fuel_type']) : $existing->FuelType;
+        $seatLayout = isset($data['seat_layout']) ? trim($data['seat_layout']) : $existing->SeatLayout;
+        $hp = isset($data['hp']) ? intval($data['hp']) : intval($existing->HP);
+        $emissionRate = calculateEmissionRate($hp, $totalSeats, $fuelType, 'Flat');
+
+        $this->db->query('UPDATE Bus SET OperatorName = :name, BusCompany = :company, FuelType = :fuel, SeatLayout = :layout, HP = :hp, TotalSeats = :seats, EmissionRate = :emission, Image1 = :img1, Image2 = :img2, Image3 = :img3 WHERE BusID = :bid');
+        $this->db->bind(':bid', $data['bus_id']);
+        $this->db->bind(':name', $data['operator']);
+        $this->db->bind(':company', $company);
+        $this->db->bind(':fuel', $fuelType);
+        $this->db->bind(':layout', $seatLayout);
+        $this->db->bind(':hp', $hp);
+        $this->db->bind(':seats', $totalSeats);
+        $this->db->bind(':emission', $emissionRate);
+        $this->db->bind(':img1', $image1);
+        $this->db->bind(':img2', $image2);
+        $this->db->bind(':img3', $image3);
+
+        if (!$this->db->execute()) {
+            return false;
+        }
+
+        // Regenerate seats if layout/seats changed
+        if ($totalSeats !== intval($existing->TotalSeats) || $seatLayout !== $existing->SeatLayout) {
+            $this->db->query('DELETE FROM bus_seats WHERE BusID = :bid');
+            $this->db->bind(':bid', $data['bus_id']);
+            $this->db->execute();
+
+            $seatsPerRow = 4;
+            if ($seatLayout === '2+1') {
+                $seatsPerRow = 3;
+            } elseif ($seatLayout === '1+1') {
+                $seatsPerRow = 2;
+            }
+
+            $this->db->query("SELECT MAX(SeatID) AS MaxID FROM bus_seats");
+            $row = $this->db->single();
+            $lastNum = 0;
+            $prefix = 'SEAT-';
+            $numberLength = 6;
+            if ($row && $row->MaxID) {
+                $maxID = str_replace($prefix, "", $row->MaxID);
+                $lastNum = (int)$maxID;
+            }
+
+            $rows = ceil($totalSeats / $seatsPerRow);
+            $seatCount = 0;
+            for ($r = 0; $r < $rows; $r++) {
+                $rowLetter = chr(65 + $r);
+                for ($c = 1; $c <= $seatsPerRow; $c++) {
+                    if ($seatCount >= $totalSeats) break;
+                    $seatNumber = $rowLetter . $c;
+                    $lastNum++;
+                    $seatId = $prefix . str_pad($lastNum, $numberLength, "0", STR_PAD_LEFT);
+
+                    $this->db->query('INSERT INTO bus_seats (SeatID, BusID, SeatNumber, IsBooked) VALUES (:sid, :bid, :num, 0)');
+                    $this->db->bind(':sid', $seatId);
+                    $this->db->bind(':bid', $data['bus_id']);
+                    $this->db->bind(':num', $seatNumber);
+                    $this->db->execute();
+                    $seatCount++;
+                }
+            }
+        }
+
+        return true;
     }
 }

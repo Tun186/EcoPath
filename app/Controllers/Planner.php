@@ -47,7 +47,7 @@ class Planner extends Controller {
         $packages = $packageModel->getAllPackages();
         $hotels = $infrastructureModel->getAllHotels();
         $landmarks = $infrastructureModel->getAllLandmarks();
-        $buses = $infrastructureModel->getAllBuses();
+        $buses = $infrastructureModel->getAllBuses(1);
 
         $data = [
             'title' => 'Manage Expeditions',
@@ -160,6 +160,78 @@ class Planner extends Controller {
                     $infrastructureModel->toggleLandmarkStatus($_POST['landmark_id'], 0);
                 } elseif ($_POST['action'] == 'restore_landmark') {
                     $infrastructureModel->toggleLandmarkStatus($_POST['landmark_id'], 1);
+                } elseif ($_POST['action'] == 'edit_bus') {
+                    $hp = isset($_POST['hp']) ? trim($_POST['hp']) : '';
+                    $total_seats = isset($_POST['total_seats']) ? trim($_POST['total_seats']) : '';
+                    $bus_id = isset($_POST['bus_id']) ? trim($_POST['bus_id']) : '';
+
+                    if ($bus_id === '') {
+                        $_SESSION['import_errors'] = ["Bus ID is required."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
+
+                    if ($hp === '' || !ctype_digit($hp) || $total_seats === '' || !ctype_digit($total_seats)) {
+                        $_SESSION['import_errors'] = ["Engine Horsepower (HP) and Passenger Capacity (Total Seats) are required and must be positive integers."];
+                        header('Location: ' . URLROOT . '/planner/infrastructure');
+                        exit;
+                    }
+
+                    $uploadDir = APPROOT . '/../public/uploads/buses/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+
+                    $uploadedImages = [null, null, null];
+                    $imageFields = ['bus_image_1', 'bus_image_2', 'bus_image_3'];
+
+                    foreach ($imageFields as $index => $field) {
+                        if (isset($_FILES[$field]) && $_FILES[$field]['error'] !== UPLOAD_ERR_NO_FILE) {
+                            if ($_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+                                $_SESSION['import_errors'] = ["Error uploading Image " . ($index + 1)];
+                                header('Location: ' . URLROOT . '/planner/infrastructure');
+                                exit;
+                            }
+
+                            $tmpPath = $_FILES[$field]['tmp_name'];
+                            $originalName = $_FILES[$field]['name'];
+                            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+                            $allowed = ['jpg', 'jpeg', 'png'];
+                            if (!in_array($extension, $allowed)) {
+                                $_SESSION['import_errors'] = ["Invalid file format for Image " . ($index + 1) . ". Only JPG, JPEG, and PNG are allowed."];
+                                header('Location: ' . URLROOT . '/planner/infrastructure');
+                                exit;
+                            }
+
+                            $newFileName = uniqid('bus_', true) . '.' . $extension;
+                            $destPath = $uploadDir . $newFileName;
+
+                            if (move_uploaded_file($tmpPath, $destPath)) {
+                                $uploadedImages[$index] = 'uploads/buses/' . $newFileName;
+                            } else {
+                                $_SESSION['import_errors'] = ["Failed to save uploaded image: " . $originalName];
+                                header('Location: ' . URLROOT . '/planner/infrastructure');
+                                exit;
+                            }
+                        }
+                    }
+
+                    $_POST['Image1'] = $uploadedImages[0];
+                    $_POST['Image2'] = $uploadedImages[1];
+                    $_POST['Image3'] = $uploadedImages[2];
+
+                    $infrastructureModel->updateBus($_POST);
+                } elseif ($_POST['action'] == 'deactivate_bus') {
+                    $busId = $_POST['bus_id'];
+                    $usageCount = $infrastructureModel->checkBusUsageCount($busId);
+                    if ($usageCount > 0) {
+                        $_SESSION['import_errors'] = ["Cannot make bus inactive because it is currently assigned to " . $usageCount . " active tour package(s)."];
+                    } else {
+                        $infrastructureModel->toggleBusStatus($busId, 0);
+                    }
+                } elseif ($_POST['action'] == 'restore_bus') {
+                    $infrastructureModel->toggleBusStatus($_POST['bus_id'], 1);
                 } elseif ($_POST['action'] == 'export_hotels') {
                     $hotels = $infrastructureModel->getAllHotels(1);
                     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
@@ -363,7 +435,7 @@ class Planner extends Controller {
             'title' => 'Infrastructure',
             'hotels' => $infrastructureModel->getAllHotels($isActiveFilter),
             'landmarks' => $infrastructureModel->getAllLandmarks($isActiveFilter),
-            'buses' => $infrastructureModel->getAllBuses(),
+            'buses' => $infrastructureModel->getAllBuses($isActiveFilter),
             'regions' => $infrastructureModel->getAllRegions(),
             'cities' => $infrastructureModel->getAllCities(),
             'showInactive' => $showInactive

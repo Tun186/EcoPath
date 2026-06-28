@@ -23,10 +23,10 @@
 <body class="bg-gray-50 font-sans h-screen flex overflow-hidden text-gray-800" 
       x-data="{ 
           openHotel: false, openLandmark: false, openBus: false, 
-          openEditHotel: false, openEditLandmark: false, 
+          openEditHotel: false, openEditLandmark: false, openEditBus: false,
           openRegion: false, openCity: false,
           openImportHotel: false, openImportLandmark: false,
-          editHotelData: {}, editLandmarkData: {}, 
+          editHotelData: {}, editLandmarkData: {}, editBusData: {}, 
           allCities: <?= htmlspecialchars(json_encode($data['cities']), ENT_QUOTES, 'UTF-8') ?>,
           hotelRegion: '', editHotelRegion: '',
           landmarkRegion: '', editLandmarkRegion: '',
@@ -383,10 +383,33 @@
                             <td class="px-6 py-3 font-medium"><?= htmlspecialchars($b->TotalSeats ?? 40) ?> seats</td>
                             <td class="px-6 py-3 text-center font-mono"><?= $b->EmissionRate ?></td>
                             <td class="px-6 py-3 text-right">
-                                <button type="button" @click="showBusSeats('<?= $b->BusID ?>', '<?= htmlspecialchars($b->OperatorName, ENT_QUOTES) ?>')" class="text-eco-primary hover:text-eco-dark font-medium transition text-xs flex items-center inline-flex bg-eco-light/50 px-2.5 py-1.5 rounded-lg border border-eco-primary/20">
-                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                    View Seats
-                                </button>
+                                <div class="flex justify-end space-x-2">
+                                    <button type="button" @click="showBusSeats('<?= $b->BusID ?>', '<?= htmlspecialchars($b->OperatorName, ENT_QUOTES) ?>')" class="text-eco-primary hover:text-eco-dark font-medium transition text-xs flex items-center inline-flex bg-eco-light/50 px-2.5 py-1.5 rounded-lg border border-eco-primary/20">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        View Seats
+                                    </button>
+                                    <button type="button" @click="editBusData = { id: '<?= $b->BusID ?>', custom_id: '<?= $b->BusID ?>', operator: '<?= htmlspecialchars($b->OperatorName, ENT_QUOTES) ?>', company: '<?= htmlspecialchars($b->BusCompany ?? 'Unknown', ENT_QUOTES) ?>', fuel_type: '<?= htmlspecialchars($b->FuelType ?? 'Oil', ENT_QUOTES) ?>', seat_layout: '<?= htmlspecialchars($b->SeatLayout ?? '2+2', ENT_QUOTES) ?>', hp: '<?= htmlspecialchars($b->HP ?? 0, ENT_QUOTES) ?>', total_seats: '<?= htmlspecialchars($b->TotalSeats ?? 40, ENT_QUOTES) ?>' }; openEditBus = true" class="text-blue-600 hover:text-blue-800 font-medium transition text-xs flex items-center inline-flex bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        Edit
+                                    </button>
+                                    <?php if ($b->IsActive): ?>
+                                        <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" class="inline m-0" onsubmit="return confirm('Are you sure you want to make this bus inactive?');">
+                                            <input type="hidden" name="action" value="deactivate_bus">
+                                            <input type="hidden" name="bus_id" value="<?= $b->BusID ?>">
+                                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium transition text-xs flex items-center inline-flex bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-200">
+                                                Deactivate
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" class="inline m-0">
+                                            <input type="hidden" name="action" value="restore_bus">
+                                            <input type="hidden" name="bus_id" value="<?= $b->BusID ?>">
+                                            <button type="submit" class="text-green-600 hover:text-green-800 font-medium transition text-xs flex items-center inline-flex bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200">
+                                                Restore
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -737,6 +760,85 @@
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                             Upload
                         </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Bus Modal -->
+    <div x-show="openEditBus" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 opacity-50"></div>
+            <div class="inline-block w-full max-w-md p-6 my-8 text-left bg-white shadow-xl rounded-2xl z-10 relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Edit Bus</h3>
+                    <button @click="openEditBus = false" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <form action="<?= URLROOT ?>/planner/infrastructure" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <input type="hidden" name="action" value="edit_bus">
+                    <input type="hidden" name="bus_id" x-model="editBusData.id">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus ID (Read Only)</label>
+                        <input type="text" x-model="editBusData.custom_id" readonly class="w-full px-4 py-2 border rounded-xl bg-gray-100 cursor-not-allowed outline-none text-sm text-gray-500 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Operator Name</label>
+                        <input type="text" name="operator" x-model="editBusData.operator" required placeholder="e.g., Scania VIP Express" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bus Company</label>
+                        <select name="company" x-model="editBusData.company" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                            <option value="Scania">Scania</option>
+                            <option value="MAN">MAN</option>
+                            <option value="Hyundai">Hyundai</option>
+                            <option value="Volvo">Volvo</option>
+                            <option value="Yutong">Yutong</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fuel Type</label>
+                        <select name="fuel_type" x-model="editBusData.fuel_type" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                            <option value="EV">EV (Electric)</option>
+                            <option value="Gas">Gas (CNG/LNG)</option>
+                            <option value="Oil">Oil (Diesel)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Seating Layout</label>
+                        <select name="seat_layout" x-model="editBusData.seat_layout" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                            <option value="2+2">2+2 (Standard - 4 seats/row)</option>
+                            <option value="2+1">2+1 (VIP/Luxury - 3 seats/row)</option>
+                            <option value="1+1">1+1 (Sleeper - 2 seats/row)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Engine Horsepower (HP)</label>
+                        <input type="number" name="hp" x-model="editBusData.hp" required placeholder="e.g., 410" min="1" max="2000" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Passenger Seats</label>
+                        <input type="number" name="total_seats" x-model="editBusData.total_seats" required placeholder="e.g., 40" min="1" max="100" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Replace Image 1 (Optional)</label>
+                        <input type="file" name="bus_image_1" accept=".jpg,.jpeg,.png" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Replace Image 2 (Optional)</label>
+                        <input type="file" name="bus_image_2" accept=".jpg,.jpeg,.png" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Replace Image 3 (Optional)</label>
+                        <input type="file" name="bus_image_3" accept=".jpg,.jpeg,.png" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-eco-primary text-sm">
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" @click="openEditBus = false" class="w-1/2 bg-gray-200 text-gray-800 py-2 rounded-xl">Cancel</button>
+                        <button type="submit" class="w-1/2 bg-eco-primary text-white py-2 rounded-xl">Update</button>
                     </div>
                 </form>
             </div>
